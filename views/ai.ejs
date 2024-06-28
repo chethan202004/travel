@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slider Buttons</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .main-div {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            background-color: #333; /* Dark background color */
+            padding: 20px;
+        }
+        .ask-ai {
+            width: 100%;
+            max-width: 800px;
+            background-color: #495057; /* Slightly lighter dark color for form background */
+            padding: 30px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .form-control, .form-control:focus {
+            background-color: #6c757d; /* Darker input background */
+            color: #fff; /* White text color */
+            border: 1px solid #ced4da;
+        }
+        .form-control::placeholder {
+            color: #ced4da;
+        }
+        .form-text {
+            color: #fbfcfd;
+        }
+        .btn-block {
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .spinner-border {
+            margin-left: 10px;
+            display: none;
+        }
+        #responseText {
+            margin-top: 20px;
+            color: blue;
+            display: none; 
+        }
+        #responseText h3 {
+            color: red; /* Red color for place headings */
+        }
+        #responseText h4 {
+            color: blue; /* Blue color for place headings */
+        }
+        #responseText h5 {
+            color: #495057; /* Slightly lighter dark color for form background */
+        }
+        .itinerary-container {
+            margin-top: 20px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #f8f9fa; /* Light gray background */
+        }
+        .itinerary-heading {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .itinerary-text {
+            margin-left: 20px;
+        }
+        #gemini-text {
+            color: rgb(221, 255, 0);
+            font-weight: bold;
+        }
+        .place-heading {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff6347; /* Orange color for place headings */
+        }
+        .place-description {
+            margin-left: 10px;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .ask-ai {
+                padding: 20px;
+            }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            .btn-block {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-div">
+        <div class="ask-ai">
+            <form id="askForm">
+                <div class="form-group">
+                    <input type="text" class="form-control col-form-label-lg" id="placeInput" placeholder="Enter place you want to visit">
+                    <large id="gemini-text" class="form-text">Please enter correct place name else no result will be shown</large>
+                </div>
+                <button type="submit" class="btn btn-warning btn-block">
+                    Ask AI
+                    <div class="spinner-border text-light" role="status" id="loadingSpinner">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </button>
+                <a id="viewMapBtn" class="btn btn-success btn-block" target="_blank" style="display: none;">
+                    View location on Maps
+                </a>
+            </form>
+            <div id="responseText" class="itinerary-container"></div> <!-- Response text container -->
+        </div>
+    </div>
+
+    <!-- Import the GoogleGenerativeAI library -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@google/generative-ai": "https://esm.run/@google/generative-ai"
+            }
+        }
+    </script>
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        const API_KEY = "AIzaSyCowAO-bwv3CHj6AIL_8tzXVu1P_sFTvZQ";
+
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        document.getElementById('askForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const place = document.getElementById('placeInput').value;
+
+            if (place) {
+                const viewMapBtn = document.getElementById('viewMapBtn');
+                viewMapBtn.href = `https://www.google.com/maps?q=${encodeURIComponent(place)}`;
+                viewMapBtn.style.display = 'block'; // Show the view map button if a place is entered
+            }
+
+            const question = `Suggest famous places to visit in ${place}, just give me top 5 names.`;
+
+            const spinner = document.getElementById('loadingSpinner');
+            const responseText = document.getElementById('responseText');
+            responseText.innerHTML = ''; // Clear previous response
+            spinner.style.display = 'inline-block'; // Show spinner
+
+            try {
+                const prompt = question;
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const text = await response.text();
+                spinner.style.display = 'none'; // Hide spinner
+                responseText.innerHTML = formatResponseText(text);
+                responseText.style.display = 'block'; // Show the response text
+            } catch (error) {
+                spinner.style.display = 'none'; // Hide spinner
+                console.error('Error:', error);
+                responseText.innerHTML = '<p>There was an error processing your request.</p>';
+                responseText.style.display = 'block'; // Show the response text with error message
+            }
+        });
+
+        function formatResponseText(text) {
+            let formattedText = '<div class="itinerary-container">';
+            formattedText += '<h3>List of Places to Visit:</h3>';
+
+            // Split the response by newline characters
+            const placesList = text.split('\n');
+
+            placesList.forEach(place => {
+                // Match the pattern where place name is surrounded by **
+                const match = place.match(/\*\*(.*?)\*\*/);
+                if (match) {
+                    // Extract the place name and the description
+                    const placeName = match[1].trim();
+                    const description = place.replace(/\*\*(.*?)\*\*/, '').trim();
+                    if (placeName) {
+                        formattedText += `<h4 class="place-heading">${placeName}</h4>`;
+                        formattedText += `<h5 class="place-description">${description}</h5>`;
+                    }
+                }
+            });
+
+            formattedText += '</div>';
+
+            return formattedText;
+        }
+    </script>
+</body>
+</html>

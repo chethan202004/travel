@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slider Buttons</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            background-color: #ddd;
+            position: relative;
+            display: flex;
+            width: 100%;
+            gap: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-nav {
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-around;
+            position: relative;
+        }
+
+        .nav-link {
+            color: #333;
+            font-size: 25px;
+            font-weight: bolder;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            cursor: pointer;
+            text-align: center;
+            transition: color 0.3s ease-in-out;
+            padding: 15px 0;
+        }
+
+        .nav-link.active {
+            color: #ffffff;
+            z-index: 2;
+        }
+
+        .slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            border-radius: 20px;
+            background-color: green;
+            transition: transform 0.3s ease-in-out;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand">
+        <div class="navbar-nav w-100">
+            <div class="slider"></div>
+            <a href="/" class="nav-link" data-path="/">India</a>
+            <a href="/karnataka" class="nav-link" data-path="/karnataka">Karnataka</a>
+        </div>
+    </nav>
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('.nav-link');
+            const slider = document.querySelector('.slider');
+            const currentPath = window.location.pathname;
+
+            links.forEach((link, index) => {
+                if (link.getAttribute('data-path') === currentPath) {
+                    link.classList.add('active');
+                    slider.style.transform = `translateX(${index * 100}%)`;
+                }
+
+                link.addEventListener('click', (e) => {
+                    links.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    slider.style.transform = `translateX(${index * 100}%)`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
